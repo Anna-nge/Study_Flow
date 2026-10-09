@@ -70,6 +70,9 @@ Log in as admin to view:
 - Total users, students and admins
 - User table with search and role filter
 - Change role, deactivate or delete users
+- ADMIN_NAME= admin
+  ADMIN_EMAIL= admin123@gmail.com
+  ADMIN_PASSWORD = I@mAdMin1
 
 # Data Storage
 All data is stored in a MongoDB Atlas database, so it stays saved after refreshing or logging in on another computer.
