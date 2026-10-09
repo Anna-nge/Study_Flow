@@ -3,6 +3,7 @@ import { handler, json, readBody, pick } from "@/lib/api";
 import { requireUser } from "@/lib/auth";
 import { findOwned } from "@/lib/ownership";
 import { deleteCourseData } from "@/lib/cascade";
+import { assertNoCourseTimeConflict } from "@/lib/course-schedule";
 
 const FIELDS = ["courseName", "courseCode", "instructor", "color", "schedule"];
 
@@ -18,7 +19,9 @@ export const PUT = handler(async (req, { params }) => {
   const user = await requireUser(req);
   const { id } = await params;
   const course = await findOwned(Course, id, user._id);
-  Object.assign(course, pick(await readBody(req), FIELDS));
+  const body = pick(await readBody(req), FIELDS);
+  if (body.schedule !== undefined) await assertNoCourseTimeConflict(body.schedule, user._id, course._id);
+  Object.assign(course, body);
   await course.save();
   return json({ course });
 });

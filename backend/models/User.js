@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
-
+ 
 const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: [true, "Name is required"], trim: true, maxlength: 80 },
@@ -19,19 +19,22 @@ const userSchema = new mongoose.Schema(
       select: false, // never returned unless explicitly requested
     },
     role: { type: String, enum: ["Student", "Admin"], default: "Student" },
+    // An Admin can deactivate an account instead of deleting it.
+    // A deactivated user cannot log in, but their data is kept.
+    active: { type: Boolean, default: true },
   },
   { timestamps: true } // createdAt, updatedAt
 );
-
+ 
 userSchema.pre("save", async function () {
   if (!this.isModified("password")) return;
   this.password = await bcrypt.hash(this.password, 10);
 });
-
+ 
 userSchema.methods.comparePassword = function (plain) {
   return bcrypt.compare(plain, this.password);
 };
-
+ 
 userSchema.set("toJSON", {
   transform(_doc, ret) {
     delete ret.password;
@@ -39,5 +42,7 @@ userSchema.set("toJSON", {
     return ret;
   },
 });
-
+ 
 export default mongoose.models.User || mongoose.model("User", userSchema);
+ 
+ 

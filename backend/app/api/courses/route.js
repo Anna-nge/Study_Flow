@@ -1,6 +1,7 @@
 import Course from "@/models/Course";
 import { handler, json, readBody, pick } from "@/lib/api";
 import { requireUser } from "@/lib/auth";
+import { assertNoCourseTimeConflict } from "@/lib/course-schedule";
 
 const FIELDS = ["courseName", "courseCode", "instructor", "color", "schedule"];
 
@@ -15,6 +16,7 @@ export const GET = handler(async (req) => {
 export const POST = handler(async (req) => {
   const user = await requireUser(req);
   const body = pick(await readBody(req), FIELDS);
+  await assertNoCourseTimeConflict(body.schedule, user._id);
   const course = await Course.create({ ...body, userId: user._id });
   return json({ course }, 201);
 });

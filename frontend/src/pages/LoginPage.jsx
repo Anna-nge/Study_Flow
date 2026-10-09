@@ -2,7 +2,8 @@ import { useState } from "react";
 import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ErrorBox } from "../components/ui";
-
+import { homeFor } from "../components/ProtectedRoute";
+ 
 export default function LoginPage() {
   const { user, login } = useAuth();
   const navigate = useNavigate();
@@ -10,23 +11,26 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-
-  if (user) return <Navigate to="/" replace />;
-
+ 
+  if (user) return <Navigate to={homeFor(user)} replace />;
+ 
   const submit = async (e) => {
     e.preventDefault();
     setBusy(true);
     setError("");
     try {
-      await login(form.email, form.password);
-      navigate(location.state?.from?.pathname || "/", { replace: true });
+      const me = await login(form.email, form.password);
+      // Admins always start on the Admin Dashboard; students go back
+      // to the page they tried to open, or their Dashboard.
+      const target = me.role === "Admin" ? "/admin" : location.state?.from?.pathname || "/";
+      navigate(target, { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {
       setBusy(false);
     }
   };
-
+ 
   return (
     <div className="auth-page">
       <form className="card auth-card" onSubmit={submit}>
@@ -49,3 +53,5 @@ export default function LoginPage() {
     </div>
   );
 }
+ 
+ 
